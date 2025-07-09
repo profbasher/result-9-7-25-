@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Result App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 p-4">
+  <div class="max-w-4xl mx-auto bg-white p-6 rounded shadow">
+    <h1 class="text-2xl font-bold mb-4">Student Result Entry</h1>
+    <form id="resultForm" class="grid grid-cols-2 gap-4 text-sm">
+      <input name="roll" placeholder="Roll" required class="border p-2"/>
+      <input name="name" placeholder="Name" required class="border p-2"/>
+      <input name="kuran_tajvid_cq" type="number" placeholder="Kuran & Tajvid (CQ)" class="border p-2"/>
+      <input name="hadis_cq" type="number" placeholder="Hadis (CQ)" class="border p-2"/>
+      <input name="akaid_fikah_cq" type="number" placeholder="Akaid & Fikah (CQ)" class="border p-2"/>
+      <input name="arabic1" type="number" placeholder="Arabic 1" class="border p-2"/>
+      <input name="arabic2" type="number" placeholder="Arabic 2" class="border p-2"/>
+      <input name="english1" type="number" placeholder="English 1" class="border p-2"/>
+      <input name="english2" type="number" placeholder="English 2" class="border p-2"/>
+      <input name="bengali1_cq" type="number" placeholder="Bengali 1 (CQ)" class="border p-2"/>
+      <input name="bengali2_cq" type="number" placeholder="Bengali 2 (CQ)" class="border p-2"/>
+      <input name="ishistory_physics_cq" type="number" placeholder="Islamic History / Physics (CQ)" class="border p-2"/>
+      <input name="math_cq" type="number" placeholder="Math (CQ)" class="border p-2"/>
+      <input name="pheducation_bio_cq" type="number" placeholder="PE / Biology (CQ)" class="border p-2"/>
+      <input name="camistry_cq" type="number" placeholder="Chemistry (CQ)" class="border p-2"/>
+      <input name="ag_hmath_cq" type="number" placeholder="Agri / Higher Math (CQ)" class="border p-2"/>
+
+      <div class="col-span-2 flex justify-between mt-4">
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Submit</button>
+        <button type="button" id="fetchBtn" class="bg-green-600 text-white px-4 py-2 rounded">Load Results</button>
+      </div>
+    </form>
+
+    <div class="mt-8 overflow-x-auto">
+      <table class="w-full table-auto border text-sm" id="resultTable">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="border px-2">Roll</th>
+            <th class="border px-2">Name</th>
+            <th class="border px-2">Total</th>
+            <th class="border px-2">Pass/Fail</th>
+            <th class="border px-2">CGPA</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxMo_UpMnVIouFsqrdjwpWRD8zvazBThVmQgzNUuyQwklleQV_g8GHj4Fe3KLtNRYe78g/exec';
+
+    const form = document.getElementById('resultForm');
+    const tableBody = document.querySelector('#resultTable tbody');
+    const fetchBtn = document.getElementById('fetchBtn');
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+
+      // Convert numeric fields
+      const subjects = [
+        'kuran_tajvid_cq','hadis_cq','akaid_fikah_cq','arabic1','arabic2',
+        'english1','english2','bengali1_cq','bengali2_cq',
+        'ishistory_physics_cq','math_cq','pheducation_bio_cq','camistry_cq','ag_hmath_cq'
+      ];
+      let total = 0, pass = true;
+      subjects.forEach(sub => {
+        const score = Number(data[sub] || 0);
+        total += score;
+        if (score < 33) pass = false;
+        data[sub] = score;
+      });
+
+      data.total = total;
+      data.pass_fail = pass ? "P" : "F";
+      data.cgpa = pass ? (total / subjects.length / 25).toFixed(2) : 0;
+      data.method = "create";
+
+      const res = await fetch(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) {
+        alert("Submitted!");
+        form.reset();
+      }
+    });
+
+    fetchBtn.addEventListener('click', async () => {
+      const res = await fetch(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({ method: "read" })
+      });
+      const data = await res.json();
+      tableBody.innerHTML = "";
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="border px-2">${row.roll}</td>
+          <td class="border px-2">${row.name}</td>
+          <td class="border px-2">${row.total}</td>
+          <td class="border px-2">${row.pass_fail}</td>
+          <td class="border px-2">${row.cgpa}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    });
+  </script>
+</body>
+</html>
