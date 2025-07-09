@@ -120,7 +120,7 @@
   });
 
   const cgpa = pass ? (total / subjectFields.length / 25).toFixed(2) : "0.00";
-  const grade = getGrade(cgpa);
+  const grade = getGrade(parseFloat(cgpa));
 
   let totalDiv = document.getElementById('live-total');
   let cgpaDiv = document.getElementById('live-cgpa');
@@ -162,8 +162,9 @@
 
     data.total = total;
     data.pass_fail = pass ? "P" : "F";
-    data.cgpa = pass ? (total / subjectFields.length / 25).toFixed(2) : 0;
-    data.grade = getGrade(data.cgpa);
+    data.cgpa = pass ? (total / subjectFields.length / 25).toFixed(2) : "0.00";
+    data.grade = getGrade(parseFloat(data.cgpa));
+
     data.method = "create";
 
     const res = await fetch(scriptURL, {
