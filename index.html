@@ -1,204 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Result App</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 text-gray-800 p-4">
+<body class="bg-gray-100 p-6">
   <div class="max-w-4xl mx-auto bg-white p-6 rounded shadow">
     <h1 class="text-2xl font-bold mb-4">Student Result Entry</h1>
-    <form id="resultForm" class="grid grid-cols-2 gap-4 text-sm">
-      <input name="roll" placeholder="Roll" required class="border p-2"/>
-      <input name="name" placeholder="Name" required class="border p-2"/>
-      <input name="kuran_tajvid_cq" type="number" placeholder="Kuran & Tajvid (CQ)" class="border p-2"/>
-      <input name="hadis_cq" type="number" placeholder="Hadis (CQ)" class="border p-2"/>
-      <input name="akaid_fikah_cq" type="number" placeholder="Akaid & Fikah (CQ)" class="border p-2"/>
-      <input name="arabic1" type="number" placeholder="Arabic 1" class="border p-2"/>
-      <input name="arabic2" type="number" placeholder="Arabic 2" class="border p-2"/>
-      <input name="english1" type="number" placeholder="English 1" class="border p-2"/>
-      <input name="english2" type="number" placeholder="English 2" class="border p-2"/>
-      <input name="bengali1_cq" type="number" placeholder="Bengali 1 (CQ)" class="border p-2"/>
-      <input name="bengali2_cq" type="number" placeholder="Bengali 2 (CQ)" class="border p-2"/>
-      <input name="ishistory_physics_cq" type="number" placeholder="Islamic History / Physics (CQ)" class="border p-2"/>
-      <input name="math_cq" type="number" placeholder="Math (CQ)" class="border p-2"/>
-      <input name="pheducation_bio_cq" type="number" placeholder="PE / Biology (CQ)" class="border p-2"/>
-      <input name="camistry_cq" type="number" placeholder="Chemistry (CQ)" class="border p-2"/>
-      <input name="ag_hmath_cq" type="number" placeholder="Agri / Higher Math (CQ)" class="border p-2"/>
+    <form id="entryForm" class="grid grid-cols-2 gap-4">
+      <input type="text" name="roll" placeholder="Roll" class="border p-2 rounded" required />
+      <input type="text" name="name" placeholder="Name" class="border p-2 rounded" required />
 
-      <div class="col-span-2 flex justify-between mt-4">
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Submit</button>
-        <button type="button" id="fetchBtn" class="bg-green-600 text-white px-4 py-2 rounded">Load Results</button>
-      </div>
+      <!-- Numeric inputs -->
+      <input type="text" name="kuran_tajvid_cq" placeholder="Kuran & Tajvid" class="border p-2 rounded" />
+      <input type="text" name="akaid_fikah_cq" placeholder="Akaid & Fikah" class="border p-2 rounded" />
+
+      <input type="text" name="arabic2" placeholder="Arabic 2" class="border p-2 rounded" />
+      <input type="text" name="english2" placeholder="English 2" class="border p-2 rounded" />
+
+      <input type="text" name="bengali2_cq" placeholder="Bengali 2" class="border p-2 rounded" />
+      <input type="text" name="math_cq" placeholder="Math" class="border p-2 rounded" />
+
+      <input type="text" name="camistry_cq" placeholder="Chemistry" class="border p-2 rounded" />
+      <input type="text" name="arabic1" placeholder="Arabic 1" class="border p-2 rounded" />
+
+      <input type="text" name="english1" placeholder="English 1" class="border p-2 rounded" />
+      <input type="text" name="bengal" placeholder="Bengali 1" class="border p-2 rounded" />
+
+      <input type="text" name="hadis_cq" placeholder="Hadis" class="border p-2 rounded" />
+      <input type="text" name="ishistory_physics_cq" placeholder="History/Physics" class="border p-2 rounded" />
+
+      <input type="text" name="pheducation_bio_cq" placeholder="PE/Biology" class="border p-2 rounded" />
+      <input type="text" name="ag_hmath_cq" placeholder="Agri/Higher Math" class="border p-2 rounded" />
+
+      <button type="submit" class="col-span-2 bg-blue-500 text-white py-2 rounded">Save / Update</button>
     </form>
 
-    <div class="mt-8 overflow-x-auto">
-      <table class="w-full table-auto border text-sm" id="resultTable">
-        <thead class="bg-gray-200">
-          <tr>
-            <th class="border px-2">Roll</th>
-            <th class="border px-2">Name</th>
-            <th class="border px-2">Total</th>
-            <th class="border px-2">Pass/Fail</th>
-            <th class="border px-2">CGPA</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+    <div class="mt-6">
+      <input id="searchRoll" type="text" placeholder="Search by Roll" class="border p-2 rounded" />
+      <button id="searchBtn" class="bg-gray-500 text-white py-1 px-3 rounded">Search</button>
     </div>
+
+    <table class="min-w-full table-auto mt-6 bg-white">
+      <thead><tr class="bg-gray-200">
+        <th class="p-2">Roll</th><th>Name</th><th>Total</th><th>Pass/Fail</th><th>CGPA</th><th>Grade</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
   </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxMo_UpMnVIouFsqrdjwpWRD8zvazBThVmQgzNUuyQwklleQV_g8GHj4Fe3KLtNRYe78g/exec';
+    const API = 'https://script.google.com/macros/s/AKfycbx66n3UU06b2gxQLej2Hu-0RjzpyVqVcgJtRXORnTyevzlRtTUZsZ7dArVhub3lw84sdg/exec';
+    const gradeMap = [
+      { min:80, g: '5.00', grade: 'A+'}, {min:70, g:'4.00','grade':'A'},
+      {min:60, g:'3.50','grade':'A−'}, {min:50, g:'3.00','grade':'B'},
+      {min:40, g:'2.00','grade':'C'}, {min:33, g:'1.00','grade':'D'},
+      {min:0,  g:'0.00','grade':'F'},
+    ];
 
-  const form = document.getElementById('resultForm');
-  const tableBody = document.querySelector('#resultTable tbody');
-  const fetchBtn = document.getElementById('fetchBtn');
+    async function fetchAll(){
+      const r = await fetch(API);
+      return r.json();
+    }
 
-  const subjectFields = [
-    'kuran_tajvid_cq','hadis_cq','akaid_fikah_cq','arabic1','arabic2',
-    'english1','english2','bengali1_cq','bengali2_cq',
-    'ishistory_physics_cq','math_cq','pheducation_bio_cq','camistry_cq','ag_hmath_cq'
-  ];
-
-  subjectFields.forEach(field => {
-    const input = form.elements[field];
-    input.addEventListener('input', liveCalculate);
-  });
-
-  function safeEval(expr) {
-    try {
-      if (/^[\d\s+\-*/().]+$/.test(expr)) {
-        return Function(`return (${expr})`)();
+    // compute total, cgpa, pass_fail, grade
+    function compute(obj){
+      const keys = ['kuran_tajvid_cq','akaid_fikah_cq','arabic1','arabic2',
+        'english1','english2','bengal','bengali2_cq',
+        'math_cq','camistry_cq','hadis_cq','ishistory_physics_cq',
+        'pheducation_bio_cq','ag_hmath_cq'];
+      let total = 0;
+      for(let k of keys){
+        const v = parseFloat(obj[k])||0;
+        total += v;
       }
-    } catch {}
-    return 0;
-  }
-
-  function getGrade(cgpa) {
-    cgpa = parseFloat(cgpa);
-    if (cgpa >= 4.00) return "A+";
-    if (cgpa >= 3.75) return "A";
-    if (cgpa >= 3.50) return "A−";
-    if (cgpa >= 3.25) return "B+";
-    if (cgpa >= 3.00) return "B";
-    if (cgpa >= 2.75) return "C+";
-    if (cgpa >= 2.50) return "C";
-    return "F";
-  }
-
-  function liveCalculate() {
-  let total = 0;
-  let pass = true;
-
-  subjectFields.forEach(field => {
-    const input = form.elements[field];
-    const raw = input.value.trim();
-    const result = safeEval(raw);
-
-    input.classList.remove('border-red-500', 'border-green-500');
-
-    if (raw === '') {
-      pass = false;  // Treat empty input as fail
-      input.classList.add('border-red-500');
-      return;
+      obj.total = total;
+      const minPass = keys.every(k => (parseFloat(obj[k])||0) >= 33);
+      obj.pass_fail = minPass ? 'Pass':'Fail';
+      const pct = total / (keys.length * 100) * 100;
+      let gg = gradeMap[gradeMap.length-1];
+      for(let g of gradeMap) if(pct>=g.min) {gg=g;break;}
+      obj.cgpa = gg.g;
+      obj.grade = gg.grade;
     }
 
-    if (!isNaN(result)) {
-      total += result;
-      if (result < 33) {
-        pass = false;
-        input.classList.add('border-red-500');
-      } else {
-        input.classList.add('border-green-500');
+    function render(rows){
+      const tbody = document.getElementById('rows'); tbody.innerHTML = '';
+      rows.forEach(r=>{
+        compute(r);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="border px-2">${r.roll}</td>
+          <td class="border px-2">${r.name}</td>
+          <td class="border px-2">${r.total}</td>
+          <td class="border px-2">${r.pass_fail}</td>
+          <td class="border px-2">${r.cgpa}</td>
+          <td class="border px-2">${r.grade}</td>
+          <td class="border px-2 space-x-1">
+            <button class="edit bg-yellow-300 px-2" data-roll="${r.roll}">Edit</button>
+            <button class="del bg-red-400 text-white px-2" data-roll="${r.roll}">Delete</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function refresh(searchRoll){
+      const data = await fetchAll();
+      const filtered = searchRoll ? data.filter(r => r.roll.includes(searchRoll)) : data;
+      render(filtered);
+    }
+
+    document.getElementById('entryForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const obj = {};
+      for(let [k,v] of fd.entries()) obj[k]=v;
+      obj.action = 'create';
+      await fetch(API, { method:'POST', body: JSON.stringify(obj) });
+      e.target.reset();
+      refresh();
+    });
+
+    document.getElementById('rows').addEventListener('click', async e => {
+      if (e.target.classList.contains('edit')) {
+        const roll = e.target.dataset.roll;
+        const data = await fetchAll();
+        const rec = data.find(r=>r.roll===roll);
+        if (!rec) return alert('Not found');
+        for(let k in rec) {
+          const inp = document.querySelector(`[name="${k}"]`);
+          if(inp) inp.value = rec[k];
+        }
+        // change form to update
+        const form = document.getElementById('entryForm');
+        form.onsubmit = async ev => {
+          ev.preventDefault();
+          const fd2 = new FormData(form);
+          const obj2 = {};
+          for(let [k,v] of fd2.entries()) obj2[k]=v;
+          obj2.action = 'update';
+          await fetch(API, { method:'POST', body: JSON.stringify(obj2) });
+          form.reset();
+          form.onsubmit = submitCreate;
+          refresh();
+        };
       }
-    } else {
-      pass = false;  // Invalid input = fail
-      input.classList.add('border-red-500');
-    }
-  });
-
-  const cgpa = pass ? (total / subjectFields.length / 25).toFixed(2) : "0.00";
-  const grade = getGrade(parseFloat(cgpa));
-
-  let totalDiv = document.getElementById('live-total');
-  let cgpaDiv = document.getElementById('live-cgpa');
-  let gradeDiv = document.getElementById('live-grade');
-
-  if (!totalDiv) {
-    const infoBox = document.createElement('div');
-    infoBox.className = 'col-span-2 mt-2 text-sm text-gray-700 space-y-1';
-
-    totalDiv = document.createElement('div'); totalDiv.id = 'live-total';
-    cgpaDiv = document.createElement('div'); cgpaDiv.id = 'live-cgpa';
-    gradeDiv = document.createElement('div'); gradeDiv.id = 'live-grade';
-
-    infoBox.append(totalDiv, cgpaDiv, gradeDiv);
-    form.appendChild(infoBox);
-  }
-
-  totalDiv.textContent = `📊 Total: ${total}`;
-  cgpaDiv.textContent = `🎓 CGPA: ${cgpa}`;
-  gradeDiv.textContent = `🏅 Grade: ${grade}`;
-}
-
-
-  form.addEventListener('submit', async e => {
-    e.preventDefault();
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
-
-    let total = 0;
-    let pass = true;
-
-    subjectFields.forEach(field => {
-      const raw = data[field].trim();
-      const score = safeEval(raw);
-      total += score;
-      if (score < 33) pass = false;
-      data[field] = score;
+      if (e.target.classList.contains('del')) {
+        if(!confirm('Delete this?')) return;
+        await fetch(API, { method:'POST', body: JSON.stringify({action:'delete', roll:e.target.dataset.roll}) });
+        refresh();
+      }
     });
 
-    data.total = total;
-    data.pass_fail = pass ? "P" : "F";
-    data.cgpa = pass ? (total / subjectFields.length / 25).toFixed(2) : "0.00";
-    data.grade = getGrade(parseFloat(data.cgpa));
+    const submitCreate = document.getElementById('entryForm').onsubmit;
+    document.getElementById('searchBtn').addEventListener('click', () => refresh(document.getElementById('searchRoll').value));
 
-    data.method = "create";
-
-    const res = await fetch(scriptURL, {
-      method: 'POST',
-      body: JSON.stringify(data)
-    });
-
-    if (res.ok) {
-      alert("✅ Submitted!");
-      form.reset();
-      liveCalculate(); // Refresh indicators
-    }
-  });
-
-  fetchBtn.addEventListener('click', async () => {
-    const res = await fetch(scriptURL, {
-      method: 'POST',
-      body: JSON.stringify({ method: "read" })
-    });
-    const data = await res.json();
-    tableBody.innerHTML = "";
-    data.forEach(row => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="border px-2">${row.roll}</td>
-        <td class="border px-2">${row.name}</td>
-        <td class="border px-2">${row.total}</td>
-        <td class="border px-2">${row.pass_fail}</td>
-        <td class="border px-2">${row.cgpa}</td>
-        <td class="border px-2">${getGrade(row.cgpa)}</td>
-      `;
-      tableBody.appendChild(tr);
-    });
-  });
-</script>
+    window.onload = () => refresh();
+  </script>
 </body>
 </html>
