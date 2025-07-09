@@ -89,50 +89,60 @@
   }
 
   function liveCalculate() {
-    let total = 0;
-    let pass = true;
+  let total = 0;
+  let pass = true;
 
-    subjectFields.forEach(field => {
-      const input = form.elements[field];
-      const raw = input.value.trim();
-      const result = safeEval(raw);
+  subjectFields.forEach(field => {
+    const input = form.elements[field];
+    const raw = input.value.trim();
+    const result = safeEval(raw);
 
-      input.classList.remove('border-red-500', 'border-green-500');
+    input.classList.remove('border-red-500', 'border-green-500');
 
-      if (!isNaN(result)) {
-        total += result;
-        if (result < 33) {
-          pass = false;
-          input.classList.add('border-red-500');
-        } else {
-          input.classList.add('border-green-500');
-        }
-      }
-    });
-
-    const cgpa = pass ? (total / subjectFields.length / 25).toFixed(2) : "0.00";
-    const grade = getGrade(cgpa);
-
-    let totalDiv = document.getElementById('live-total');
-    let cgpaDiv = document.getElementById('live-cgpa');
-    let gradeDiv = document.getElementById('live-grade');
-
-    if (!totalDiv) {
-      const infoBox = document.createElement('div');
-      infoBox.className = 'col-span-2 mt-2 text-sm text-gray-700 space-y-1';
-
-      totalDiv = document.createElement('div'); totalDiv.id = 'live-total';
-      cgpaDiv = document.createElement('div'); cgpaDiv.id = 'live-cgpa';
-      gradeDiv = document.createElement('div'); gradeDiv.id = 'live-grade';
-
-      infoBox.append(totalDiv, cgpaDiv, gradeDiv);
-      form.appendChild(infoBox);
+    if (raw === '') {
+      pass = false;  // Treat empty input as fail
+      input.classList.add('border-red-500');
+      return;
     }
 
-    totalDiv.textContent = `📊 Total: ${total}`;
-    cgpaDiv.textContent = `🎓 CGPA: ${cgpa}`;
-    gradeDiv.textContent = `🏅 Grade: ${grade}`;
+    if (!isNaN(result)) {
+      total += result;
+      if (result < 33) {
+        pass = false;
+        input.classList.add('border-red-500');
+      } else {
+        input.classList.add('border-green-500');
+      }
+    } else {
+      pass = false;  // Invalid input = fail
+      input.classList.add('border-red-500');
+    }
+  });
+
+  const cgpa = pass ? (total / subjectFields.length / 25).toFixed(2) : "0.00";
+  const grade = getGrade(cgpa);
+
+  let totalDiv = document.getElementById('live-total');
+  let cgpaDiv = document.getElementById('live-cgpa');
+  let gradeDiv = document.getElementById('live-grade');
+
+  if (!totalDiv) {
+    const infoBox = document.createElement('div');
+    infoBox.className = 'col-span-2 mt-2 text-sm text-gray-700 space-y-1';
+
+    totalDiv = document.createElement('div'); totalDiv.id = 'live-total';
+    cgpaDiv = document.createElement('div'); cgpaDiv.id = 'live-cgpa';
+    gradeDiv = document.createElement('div'); gradeDiv.id = 'live-grade';
+
+    infoBox.append(totalDiv, cgpaDiv, gradeDiv);
+    form.appendChild(infoBox);
   }
+
+  totalDiv.textContent = `📊 Total: ${total}`;
+  cgpaDiv.textContent = `🎓 CGPA: ${cgpa}`;
+  gradeDiv.textContent = `🏅 Grade: ${grade}`;
+}
+
 
   form.addEventListener('submit', async e => {
     e.preventDefault();
